@@ -1,192 +1,88 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var cors = require('cors')
+var express = require("express");
+const studentsData = require("./students");
+var bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+var cors = require("cors");
+const { addStudent } = require("./studentsDb");
+const { updateStudent } = require("./studentsDb");
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
-let students = [{
-    name: 'rahul',
-    "rollNumber": 1,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['JAVA', 'HTML'],
-    level: 'Intermediate',
-    email : 'rahul21@gmail.com'
-},
-{
-    name: 'manish',
-    "rollNumber": 2,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['JAVA', 'HTML'],
-    level: 'Basic',
-    email : 'manish21@gmail.com'
-},
-{
-    name: 'rohit',
-    "rollNumber": 3,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['HTML'],
-    level: 'Advance',
-    email : 'rohit77@gmail.com'
 
-},
-{
-    name: 'sandip',
-    "rollNumber": 4,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['HTML', 'JAVASCRIPT'],
-    level: 'Intermediate',
-    email : 'sandip90@gmail.com'
-},
-{
-    "id": 5,
-    name: 'rishabh',
-    "rollNumber": 7,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['HTML', 'PYTHON'],
-    level: 'Intermediate',
-    email : 'rishabh25@gmail.com'
-},
-{
-    name: 'rushikesh',
-    "rollNumber": 9,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['PYTHON'],
-    level: 'Advance',
-    email : 'rushikesh9@gmail.com'
-},
-{
-    name: 'akshay',
-    "rollNumber": 14,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['HTML', 'REACT'],
-    level: 'Advance',
-    email : 'akshay15@gmail.com'
-},
-{
-    name: 'satyam',
-    "rollNumber": 22,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['JAVASCRIPT', 'ANGULAR'],
-    level: 'Advance',
-    email : 'satyam01@gmail.com'
-},
-{
-    name: 'aniket',
-    "rollNumber": 44,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['HTML', 'JAVASCRIPT', 'REACT'],
-    level: 'Advance',
-    email : 'aniket04@gmail.com'
-},
-{
-    name: 'rohan',
-    "rollNumber": 35,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['HTML', 'JAVASCRIPT', 'ANGULAR'],
-    level: 'Basic',
-    email : 'rohan35@gmail.com'
-},
-{
-    name: 'ketan',
-    "rollNumber": 30,
-    address: {
-        city: 'Pune',
-        zipcode: 411037
-    },
-    trainings: ['HTML', 'REACT', 'PYTHON'],
-    level: 'Intermediate',
-    email : 'ketan5@gmail.com'
-}
-];
+const dbUrl = "mongodb://localhost:27017/students";
+mongoose
+  .connect(dbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((error) => console.error("MongoDB connection error:", error));
 
-
-
-
-
-app.get('/', function (req, res) {
-    res.send('Hello World')
+app.get("/", function (req, res) {
+  res.send("Hello World");
 });
 
-app.get('/students', function (req, res) {
-    res.status(200).json(students);
+app.get("/students", async function (req, res) {
+  try {
+    res.status(200).json(studentsData);
+  } catch (error) {
+    res.status(500).json({ error: "Error retriving students" });
+  }
 });
 
-app.get('/students/level/:level', function (req, res) {
-    const level = req.params.level;
-    students = students.filter(student => student.level === level);
-    res.status(200).json(students);
- });
+app.get("/students/level/:level", function (req, res) {
+  const level = req.params.level;
+  studentsData = studentsData.filter((student) => student.level === level);
+  res.status(200).json(studentsData);
+});
 
-app.post('/student', function (req, res) {
-    const newStudent = req.body;
-    if (!Array.isArray(newStudent.trainings)){
-        res.status(400).send("Trainings must be Array")
+app.post("/student", function (req, res) {
+  const newStudent = req.body;
+  if (!Array.isArray(newStudent.trainings)) {
+    res.status(400).send("Trainings must be Array");
+  } else {
+    const emailValidation = studentsData.find(
+      (student) => student.email === newStudent.email
+    );
+    const rollnoValidation = studentsData.find(
+      (student) => student.rollNumber === newStudent.rollNumber
+    );
+    if (emailValidation) {
+      res.status(400).json({ error: "Email address already exist..!" });
     }
-    else {
-    students.push(newStudent);
-    res.status(200).json(students);
+    if (rollnoValidation) {
+      res.status(400).json({ error: "Roll Number already exist..!" });
+    } else {
+      addStudent(newStudent);
+      res.status(200).json(studentsData);
     }
+  }
 });
 
-app.get('/student/:rollNumber', function (req, res) {
-    const student = students.find(student => student.rollNumber === parseInt(req.params.rollNumber))
-    res.status(200).json(student);
+app.get("/student/:rollNumber", function (req, res) {
+  const student = studentsData.find(
+    (student) => student.rollNumber === parseInt(req.params.rollNumber)
+  );
+  res.status(200).json(student);
 });
 
-// app.get('/student/:level', function (req, res){
-//     const student = students.find(student => student.level === parseInt(req.params.level) )
-//     res.status(200).json(student);
-// })
-
-app.delete('/student/:rollNumber', function (req, res) {
-    students = students.filter(student => student.rollNumber !== parseInt(req.params.rollNumber))
-    res.status(200).json(students);
+app.delete("/student/:rollNumber", function (req, res) {
+  studentsData = studentsData.filter(
+    (student) => student.rollNumber !== parseInt(req.params.rollNumber)
+  );
+  res.status(200).json(studentsData);
 });
 
-
-app.put('/student/:rollNumber', function (req, res) {
-    const newAttributes = req.body;
-    students = students.map(student => {
-        if (student.rollNumber === parseInt(req.params.rollNumber)) {
-            student = {
-                ...student,
-                ...newAttributes
-            }
-        }
-        return student;
-    })
-    res.status(200).json(students);
+app.put("/student/:rollNumber", async function (req, res) {
+  const newAttributes = req.body;
+  if (!Array.isArray(newAttributes.trainings)) {
+    res.status(400).send("Trainings must be Array");
+  } else {
+    const studentObj = studentsData.find(
+      (student) => student.rollNumber === parseInt(req.params.rollNumber)
+    );
+    if (studentObj) {
+      await updateStudent(req.params.rollNumber, newAttributes);
+      res.status(200).json(newAttributes);
+    }
+  }
 });
-
-app.listen(5050);
-console.log('Hello');
+app.listen(5555);
+console.log("Hello 1234");
