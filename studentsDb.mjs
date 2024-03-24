@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema({
   name: String,
@@ -15,7 +15,6 @@ const studentSchema = new mongoose.Schema({
 const StudentDb = mongoose.model("studentrecs", studentSchema);
 const getAllStudents = async () => {
   const students = await StudentDb.find({});
-  console.log("students::", students);
   return students;
 };
 
@@ -38,8 +37,5 @@ const updateStudent = async (rollNumber, update) => {
   return updatedStudent;
 };
 
-module.exports = {
-  getAllStudents,
-  addStudent,
-  updateStudent,
-};
+export {getAllStudents, addStudent, updateStudent};
+
