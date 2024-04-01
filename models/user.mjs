@@ -14,6 +14,11 @@ const UserSchema = new Schema({
     required: true,
     unique: true,
   },
+  role: {
+    type: String,
+    required: true,
+    default: "student"
+  }
 });
 
 UserSchema.plugin(passportLocalMongoose);

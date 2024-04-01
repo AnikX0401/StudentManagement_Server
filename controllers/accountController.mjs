@@ -5,7 +5,7 @@ import jwt from "jwt-simple";
 export function login(req, res) {
   User.findOne({ username: req.body.username }).then((user, err) => {
     if (err) {
-      console.log("Error");
+      // console.log("Error");
     } else {
       const payload = {
         id: user.id,
@@ -22,6 +22,7 @@ export function register(req, res) {
     new User({
       email: req.body.email,
       username: req.body.username,
+      role: req.body.role
     }),
     req.body.password,
     function (err, msg) {

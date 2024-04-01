@@ -18,6 +18,11 @@ const getAllStudents = async () => {
   return students;
 };
 
+const getStudentByRollNumber = async(rollNumber) => {
+  const students = await StudentDb.findOne({rollNumber});
+  return students;
+};
+
 const addStudentDb = mongoose.model("studentrecs", studentSchema);
 const addStudent = async (studentData) => {
   const db = new addStudentDb(studentData);
@@ -37,5 +42,5 @@ const updateStudent = async (rollNumber, update) => {
   return updatedStudent;
 };
 
-export {getAllStudents, addStudent, updateStudent};
+export {getAllStudents, addStudent, updateStudent, getStudentByRollNumber};
 

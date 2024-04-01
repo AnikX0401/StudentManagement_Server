@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import cors from "cors";
-import { updateStudent, addStudent, getAllStudents } from "./studentsDb.mjs";
+import { updateStudent, addStudent, getAllStudents, getStudentByRollNumber } from "./studentsDb.mjs";
 import cookieParser from "cookie-parser";
 import User from "./models/user.mjs";
 import * as accountController from "./controllers/accountController.mjs";
@@ -56,15 +56,17 @@ app.get(
   }
 );
 
-app.post("/student", function (req, res) {
+app.post("/student", async function (req, res) {
   const newStudent = req.body;
+  const students = await getAllStudents();
   if (!Array.isArray(newStudent.trainings)) {
     res.status(400).send("Trainings must be Array");
   } else {
-    const emailValidation = getAllStudents.find(
+    console.log("students::", students)
+    const emailValidation = students.find(
       (student) => student.email === newStudent.email
     );
-    const rollnoValidation = getAllStudents.find(
+    const rollnoValidation = students.find(
       (student) => student.rollNumber === newStudent.rollNumber
     );
     if (emailValidation) {
@@ -74,33 +76,33 @@ app.post("/student", function (req, res) {
       res.status(400).json({ error: "Roll Number already exist..!" });
     } else {
       addStudent(newStudent);
-      const students = getAllStudents();
-      res.status(200).json(students);
+      // const students = getAllStudents();
+      return res.status(200).json(students);
     }
   }
 });
 
-app.get("/student/:rollNumber", function (req, res) {
-  const student = getAllStudents.find(
-    (student) => student.rollNumber === parseInt(req.params.rollNumber)
-  );
+app.get("/student/:rollNumber", async function (req, res) {
+  const student =  await getStudentByRollNumber(parseInt(req.params.rollNumber))
+  setTimeout(() => {
   res.status(200).json(student);
+  }, 8000);
 });
 
-app.delete("/student/:rollNumber", function (req, res) {
-  getAllStudents = getAllStudents.filter(
-    (student) => student.rollNumber !== parseInt(req.params.rollNumber)
-  );
-  const students = getAllStudents();
+app.delete("/student/:rollNumber", async function (req, res) {
+  const students =  await getAllStudents(parseInt(req.params.rollNumber));
+  
+  // const students = getAllStudents();
   res.status(200).json(students);
 });
 
 app.put("/student/:rollNumber", async function (req, res) {
   const newAttributes = req.body;
+  const students = await getAllStudents();
   if (!Array.isArray(newAttributes.trainings)) {
     res.status(400).send("Trainings must be Array");
   } else {
-    const studentObj = getAllStudents.find(
+    const studentObj = students.find(
       (student) => student.rollNumber === parseInt(req.params.rollNumber)
     );
     if (studentObj) {
@@ -109,5 +111,8 @@ app.put("/student/:rollNumber", async function (req, res) {
     }
   }
 });
+
+
+
 app.listen(5555);
 console.log("Hello 1234");
